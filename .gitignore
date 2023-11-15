@@ -1,0 +1,8 @@
+.vscode/
+._*
+__pycache__/
+notebooks/test/
+data/processed/
+tmp/
+src/old_src
+jobs/
