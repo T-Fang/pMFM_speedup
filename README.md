@@ -386,10 +386,9 @@ In the source code:
 ### Dataset Generation
 
 #### Empirical Group-Level Information
+*Note: Since the dataset is derived from the [HCP](https://www.humanconnectome.org/study/hcp-young-adult/document/1200-subjects-data-release) dataset, the generated dataset is not uploaded here.*
 
-The original empirical BOLD timecourses in the [HCP](https://www.humanconnectome.org/study/hcp-young-adult/document/1200-subjects-data-release) are stored in `dataset_generation/input_to_pMFM/pMFM_TC`.
-
-The 1000 subjects are grouped based on `train_groups.csv`, `validation_groups.csv`, and`/test_groups.csv`, where each row contains several subject IDs that define a subject group (you may define your own grouping). The MATLAB function `generate_inputs_wrapper` will generate group-level information for each of the subject groups, including group-level SC, FC, FCD, RSFC gradient, and myelin. The resulting empirical group-level information is stored in `dataset_generation/input_to_pMFM/[train OR validation OR test]/[group index within a set]` (e.g., the group-level information for the first subject group in the train set is stored in `dataset_generation/input_to_pMFM/train/1`).
+The 1000 subjects from the [HCP](https://www.humanconnectome.org/study/hcp-young-adult/document/1200-subjects-data-release) dataset are grouped based on `train_groups.csv`, `validation_groups.csv`, and `test_groups.csv`, where each row contains several subject IDs that define a subject group (you may define your own grouping). The MATLAB function `generate_inputs_wrapper` will generate group-level information for each of the subject groups, including group-level SC, FC, FCD, RSFC gradient, and myelin. The resulting empirical group-level information is stored in `dataset_generation/input_to_pMFM/[train OR validation OR test]/[group index within a set]` (e.g., the group-level information for the first subject group in the train set is stored in `dataset_generation/input_to_pMFM/train/1`).
 
 #### Use CMA-ES with pMFM to Generate Parameters along with their Costs 
 
