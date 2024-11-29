@@ -1,6 +1,6 @@
 # pMFM_speedup
 
-The goal of this project is to use deep learning (DL) to speed up pMFM parameter selection/training. This repository has provided various trained models that can predict a pMFM parameter's costs. Additionally, the script for pMFM parameter optimization using the DL model is also provided, which can generate a set of pMFM parameters with decent costs. Compared with the original method for parameter optimization (CMA-ES with pMFM) which takes several hours to complete, the method proposed by this project would only take a few minutes. The significant speedup can greatly benefit downstream applications/experiments that require good parameters.
+The goal of this project is to use machine learning or deep learning (DL) to speed up the parameter optimization process of the Mean Field Model (MFM), or more specifically parametric MFM (pMFM). This repository has provided various trained models that can predict a pMFM parameter's costs. Additionally, the script for pMFM parameter optimization using the DL model is also provided, which can generate a set of pMFM parameters with decent costs. Compared with the original method for parameter optimization (CMA-ES combined with Euler integration that solves the ODE of the pMFM) which takes several hours to complete, the method proposed by this project would only take a few minutes. The significant speedup can greatly benefit downstream applications/experiments that require good parameters.
 
 
 
@@ -57,25 +57,24 @@ Below are the detailed descriptions of this project. For the usage and organizat
 
 ![pMFM_speedup-pMFM](https://user-images.githubusercontent.com/61874388/168448462-7efcb55a-93f0-4b68-8ad8-00484b76b4fb.png)
 
-Proposed by the NUS Computational Brain Imaging Group (CBIG), the **parametric mean-ﬁeld model (pMFM)** is a computational model (not based on machine learning) that aims to simulate interactions between brain regions when individuals perform specific tasks.
+Proposed by the NUS Computational Brain Imaging Group (CBIG), the [**parametric Mean Field Model (pMFM)**](https://www.nature.com/articles/s41467-021-26704-y) is a computational model for simulating and
+understanding human brain dynamics.
 
-In the context of this project, we consider 68 brain regions (i.e. cortical regions of interest (ROI)). Each human subject has a 68x68 brain structural connectivity (SC) matrix, indicating how strong the physical connections between different brain regions are. Each subject had also gone through the rs-fMRI procedure to generate the corresponding BOLD (Blood Oxygenation Level-Dependent) signal, which can reflect how active each brain regions are. The BOLD signal is then used to generate a 68x68 functional connectivity (FC) matrix (How strong are the correlations between activities of brain region pairs) and an 1118 × 1118 functional connectivity dynamics (FCD) matrix (how FC changes over time). Subjects are formed into groups, with corresponding group-averaged SC, FC, and FCD
+In the context of this project, we consider 68 brain regions (i.e. cortical regions of interest (ROI)). Each human subject has a 68x68 brain structural connectivity (SC) matrix, indicating how strong the physical connections between different brain regions are. Each subject had also gone through the resting-state functional magnetic resonance imaging (rs-fMRI) procedure to generate the corresponding BOLD (Blood Oxygenation Level-Dependent) signal, which can reflect how active each brain regions are. The BOLD signal is then used to generate a 68x68 functional connectivity (FC) matrix (How strong are the correlations between activities of brain region pairs) and an 1118 × 1118 functional connectivity dynamics (FCD) matrix (how FC changes over time). Subjects are formed into groups, with corresponding group-averaged SC, FC, and FCD
 
-The input to the pMFM includes a group-level SC, and 205 parameters (1 + 3 x 68 = 205): There is a global scaling factor G, and each brain region has three parameters wEE, wEI, and 𝜎. After taking in an SC and a parameter vector of length 205, the pMFM will generate a simulated BOLD signal, which is then used to generate simulated FC and FCD. Then, the simulated FC and FCD are compared with the empirical FC and FCD, which comes from the actual BOLD signals of subjects in the subject group. The metrics we use to compare these matrices are as follows:
+The input to the pMFM includes a group-level SC, and 205 parameters (1 + 3 x 68 = 205): There is a global scaling factor G, and each brain region has three parameters wEE, wEI, and 𝜎. After taking in an SC and a parameter vector of length 205, the pMFM will generate a simulated BOLD signal, which is then used to generate simulated FC and FCD. Then, the simulated FC and FCD are compared with the empirical FC and FCD, which comes from the empirical BOLD signals of subjects in the subject group. The metrics we use to compare these matrices are as follows:
 
 - FC_CORR: FC correlation cost, defined by 1 - correlation between the simulated FC and the empirical FC
 - FC_L1: The L1 distance between the simulated FC and the empirical FC
 - FCD_KS: The KS statistic between the simulated FCD and the empirical FCD
 
-The goal of the pMFM study is to get insights into how brain regions communicate with each other via analyzing the pMFM with parameters that can generate BOLD signals similar to the empirical ones. To find these "good" parameters, we need to take a subject group's SC and optimize the 205 parameters so that the pMFM can generate BOLD signals with FC and FCD that are similar to the empirical ones.
+To accurately capture the human brain dynamics, we need to find a set of good parameters for MFM such that the BOLD signals generated have similar FC and FCD as that of the empirical ones.
 
 ### Motivation for pMFM_speedup
 
 ![pMFM_speedup-Deep Learning Model](https://s2.loli.net/2022/11/10/Rfrw8odSjcPNkVl.png)
 
-The current pMFM has a major downside: the simulation is very slow. The underlying equations of pMFM are nonlinear ordinary differential equations (ODEs) that do not have a closed-form solution. Hence, the forward Euler method (a type of numerical procedure for solving ODEs) is used in pMFM, which has an undesirable simulation speed (15 mins for one run). Therefore, it requires a significant amount of time to find a good parameter vector. The goal of pMFM_speedup is to come up with a deep-learning (DL) model to help the parameter selection process. The inputs to pMFM_speedup models are the same as that of pMFM and the pMFM_speedup models will perform a regression task to output a cost vector containing FC_CORR, FC_L1, and FCD_KS indicating how good the input parameter vector is. In this way, the pMFM_speedup can filter out bad parameters with much less time (compared to pMFM), and we only need to use pMFM for those parameters with good cost vectors.
-
-
+The current pMFM has a major downside: the simulation is very slow. The underlying equations of pMFM are nonlinear ordinary differential equations (ODEs) that do not have a closed-form solution. Hence, the forward Euler method (a type of numerical procedure for solving ODEs) is used in pMFM, which has an undesirable simulation speed. Therefore, it requires a significant amount of time to find a good set of parameter (parameter vector of length 205). The goal of pMFM_speedup is to come up with a deep-learning (DL) model to help the parameter selection process. The inputs to pMFM_speedup models are the same as that of pMFM and the pMFM_speedup models will perform a regression task to output a cost vector containing FC_CORR, FC_L1, and FCD_KS indicating how good the input parameter vector is. In this way, the pMFM_speedup can filter out bad parameters with much less time (compared to pMFM), and we only need to use pMFM for those parameters with good costs.
 
 ## Dataset Creation
 
